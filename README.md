@@ -81,20 +81,20 @@ Servers are defined in `~/.sshdeck/config.json`. You can create or edit this fil
     {
       "tag": "prod",
       "name": "Production API",
-      "host": "192.168.1.92",
+      "host": "203.0.113.10",
       "port": 22,
       "username": "root",
       "group": "production",
       "description": "Main API cluster node",
       "auth": {
         "type": "key",
-        "keyPath": "~/.ssh/id_ed25519"
+      "keyPath": "~/.ssh/your_private_key"
       }
     },
     {
       "tag": "dev",
       "name": "Development Sandbox",
-      "host": "10.0.0.15",
+      "host": "198.51.100.20",
       "port": 22,
       "username": "ubuntu",
       "group": "development",
@@ -117,8 +117,8 @@ sshdeck ls
 Output:
 ```text
 TAG        NAME                HOST              USER       GROUP
-prod       Production API      192.168.1.92      root       production
-dev        Development Sandbox 10.0.0.15         ubuntu     development
+prod       Production API      203.0.113.10      root       production
+dev        Development Sandbox 198.51.100.20     ubuntu     development
 ```
 
 ### 3. Connect
@@ -129,7 +129,7 @@ sshdeck prod
 
 SSHDeck prints a minimal connection banner and immediately hands terminal control to OpenSSH:
 ```text
-Connecting to Production API (root@192.168.1.92)...
+Connecting to Production API (root@203.0.113.10)...
 ```
 
 ---
@@ -164,7 +164,7 @@ Specifies a private identity key on your local machine:
 {
   "auth": {
     "type": "key",
-    "keyPath": "~/.ssh/id_ed25519"
+    "keyPath": "~/.ssh/your_private_key"
   }
 }
 ```

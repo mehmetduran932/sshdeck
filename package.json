@@ -1,6 +1,6 @@
 {
   "name": "sshdeck",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Fast, tag-based SSH connection manager for Windows, macOS and Linux.",
   "author": "SSHDeck Contributors",
   "license": "MIT",
