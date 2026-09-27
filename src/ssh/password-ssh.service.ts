@@ -71,6 +71,7 @@ export class PasswordSSHService {
       if (closed) return;
       closed = true;
       stdin.off("data", onInput);
+      stdin.pause();
       stream.off("data", onOutput);
       process.stdout.off("resize", onResize);
       if (stdin.isTTY) stdin.setRawMode(Boolean(wasRaw));
