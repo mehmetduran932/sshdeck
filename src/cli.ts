@@ -186,8 +186,14 @@ function isDirectInvocation(): boolean {
   }
 }
 
+async function runCli(): Promise<void> {
+  const configService = new ConfigService();
+  await configService.ensureConfigFile();
+  const program = createProgram(configService);
+  await program.parseAsync(process.argv);
+}
+
 // Execute when invoked directly, including through npm's bin symlinks.
 if (isDirectInvocation()) {
-  const program = createProgram();
-  program.parse(process.argv);
+  void runCli().catch(handleCliError);
 }
