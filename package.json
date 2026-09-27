@@ -27,8 +27,8 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
-    "sshdeck": "./dist/cli.js",
-    "sd": "./dist/cli.js"
+    "sshdeck": "dist/cli.js",
+    "sd": "dist/cli.js"
   },
   "files": [
     "dist",
