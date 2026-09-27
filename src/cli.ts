@@ -14,6 +14,7 @@ import { removeCommand } from "./commands/remove.command.js";
 import { findCommand } from "./commands/find.command.js";
 import { setPasswordCommand } from "./commands/credentials.command.js";
 import { SystemCredentialStore } from "./credentials/system-credential-store.js";
+import { PasswordSSHService } from "./ssh/password-ssh.service.js";
 import { logger } from "./utils/logger.js";
 import { SSHDeckError, SSHConnectionError } from "./utils/errors.js";
 
@@ -204,8 +205,10 @@ function isDirectInvocation(): boolean {
 
 async function runCli(): Promise<void> {
   const configService = new ConfigService();
+  const credentialStore = new SystemCredentialStore();
   await configService.ensureConfigFile();
-  const program = createProgram(configService);
+  const sshService = new SSHService(undefined, new PasswordSSHService(credentialStore));
+  const program = createProgram(configService, undefined, sshService, credentialStore);
   await program.parseAsync(process.argv);
 }
 

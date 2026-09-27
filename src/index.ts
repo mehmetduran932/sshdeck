@@ -7,6 +7,7 @@ export * from "./server/server.service.js";
 export * from "./ssh/ssh.types.js";
 export * from "./ssh/native-ssh.service.js";
 export * from "./ssh/ssh.service.js";
+export * from "./ssh/password-ssh.service.js";
 export * from "./credentials/credential-store.js";
 export * from "./credentials/memory-credential-store.js";
 export * from "./credentials/system-credential-store.js";

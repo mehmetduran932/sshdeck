@@ -1,9 +1,12 @@
 import type { ServerConfig } from "../config/config.types.js";
 import { NativeSSHService } from "./native-ssh.service.js";
-import { SSHConnectionError } from "../utils/errors.js";
+import { PasswordSSHService } from "./password-ssh.service.js";
 
 export class SSHService {
-  constructor(private nativeSSHService: NativeSSHService = new NativeSSHService()) {}
+  constructor(
+    private nativeSSHService: NativeSSHService = new NativeSSHService(),
+    private passwordSSHService?: PasswordSSHService
+  ) {}
 
   /**
    * Connects to the given server using the appropriate authentication backend.
@@ -14,16 +17,8 @@ export class SSHService {
       case "agent":
         return this.nativeSSHService.connect(server);
       case "password":
-        // Password authentication will be handled by password SSH runner (ssh2)
-        throw new SSHConnectionError(
-          `Password authentication for server "${server.name}" requires the password runner module.`
-        );
-      default: {
-        const _exhaustiveCheck: never = server.auth;
-        throw new SSHConnectionError(
-          `Unsupported authentication type: ${JSON.stringify(_exhaustiveCheck)}`
-        );
-      }
+        if (!this.passwordSSHService) throw new Error("Password SSH service is not configured.");
+        return this.passwordSSHService.connect(server);
     }
   }
 }
