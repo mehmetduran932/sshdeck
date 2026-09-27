@@ -66,13 +66,19 @@ export class PasswordSSHService {
     stdin.resume();
     stdin.on("data", onInput);
     stream.on("data", onOutput);
-    stream.once("close", () => {
+    let closed = false;
+    const closeTerminal = (): void => {
+      if (closed) return;
+      closed = true;
       stdin.off("data", onInput);
       stream.off("data", onOutput);
       process.stdout.off("resize", onResize);
       if (stdin.isTTY) stdin.setRawMode(Boolean(wasRaw));
       onClose();
-    });
+    };
+    stream.once("close", closeTerminal);
+    stream.once("end", closeTerminal);
+    stream.once("exit", closeTerminal);
     process.stdout.on("resize", onResize);
   }
 }
