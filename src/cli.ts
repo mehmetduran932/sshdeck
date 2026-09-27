@@ -12,6 +12,8 @@ import { listCommand } from "./commands/list.command.js";
 import { addCommand, editCommand } from "./commands/server-wizard.command.js";
 import { removeCommand } from "./commands/remove.command.js";
 import { findCommand } from "./commands/find.command.js";
+import { setPasswordCommand } from "./commands/credentials.command.js";
+import { SystemCredentialStore } from "./credentials/system-credential-store.js";
 import { logger } from "./utils/logger.js";
 import { SSHDeckError, SSHConnectionError } from "./utils/errors.js";
 
@@ -21,7 +23,8 @@ const pkg = require("../package.json") as { version: string; description: string
 export function createProgram(
   configService = new ConfigService(),
   serverService = new ServerService(configService),
-  sshService = new SSHService()
+  sshService = new SSHService(),
+  credentialStore = new SystemCredentialStore()
 ): Command {
   const program = new Command();
 
@@ -123,6 +126,19 @@ export function createProgram(
     .action(async (query: string) => {
       try {
         await findCommand(query, serverService);
+      } catch (err) {
+        handleCliError(err);
+      }
+    });
+
+  program
+    .command("credentials")
+    .description("Manage passwords in the system credential store")
+    .command("set <tag>")
+    .description("Store a server password securely")
+    .action(async (tag: string) => {
+      try {
+        await setPasswordCommand(tag, serverService, credentialStore);
       } catch (err) {
         handleCliError(err);
       }

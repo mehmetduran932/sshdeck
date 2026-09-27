@@ -11,4 +11,5 @@ export default defineConfig({
   sourcemap: true,
   target: "node18",
   splitting: false,
+  external: ["keytar"],
 });

@@ -1,6 +1,6 @@
 {
   "name": "sshdeck",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Fast, tag-based SSH connection manager for Windows, macOS and Linux.",
   "author": "SSHDeck Contributors",
   "license": "MIT",
@@ -55,6 +55,7 @@
   "dependencies": {
     "@inquirer/prompts": "^7.10.1",
     "commander": "^12.1.0",
+    "keytar": "^7.9.0",
     "picocolors": "^1.1.1",
     "zod": "^3.23.8"
   },
