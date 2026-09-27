@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
+import { realpathSync } from "node:fs";
 import { createRequire } from "node:module";
+import { pathToFileURL } from "node:url";
 import { Command } from "commander";
 import { ConfigService } from "./config/config.service.js";
 import { ServerService } from "./server/server.service.js";
@@ -171,11 +173,21 @@ function handleCliError(err: unknown): never {
   process.exit(1);
 }
 
-// Execute when invoked directly
-if (
-  (process.argv[1] && process.argv[1].endsWith("cli.js")) ||
-  process.argv[1]?.endsWith("cli.ts")
-) {
+function isDirectInvocation(): boolean {
+  const entryPath = process.argv[1];
+  if (!entryPath) return false;
+
+  try {
+    // Global npm commands are symlinks to dist/cli.js. Resolve the entry path
+    // before comparing it so both direct and globally-installed usage work.
+    return pathToFileURL(realpathSync(entryPath)).href === import.meta.url;
+  } catch {
+    return false;
+  }
+}
+
+// Execute when invoked directly, including through npm's bin symlinks.
+if (isDirectInvocation()) {
   const program = createProgram();
   program.parse(process.argv);
 }
