@@ -10,6 +10,25 @@ import { ConfigSchema, formatConfigValidationErrors } from "./config.schema.js";
 import type { AppConfig } from "./config.types.js";
 import { InvalidConfigError } from "../utils/errors.js";
 
+const INITIAL_CONFIG: AppConfig = {
+  version: CURRENT_CONFIG_VERSION,
+  servers: [
+    {
+      tag: "example",
+      name: "Example Server",
+      host: "192.0.2.10",
+      port: 22,
+      username: "your-username",
+      group: "examples",
+      description: "Replace this example with your own server details, or remove it.",
+      auth: {
+        type: "key",
+        keyPath: "~/.ssh/id_ed25519",
+      },
+    },
+  ],
+};
+
 export class ConfigService {
   private configPath: string;
 
@@ -103,8 +122,8 @@ export class ConfigService {
       await fs.access(this.configPath);
     } catch {
       await this.save({
-        version: CURRENT_CONFIG_VERSION,
-        servers: [],
+        ...INITIAL_CONFIG,
+        servers: [...INITIAL_CONFIG.servers],
       });
     }
   }

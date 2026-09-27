@@ -184,6 +184,19 @@ describe("ConfigService", () => {
     await expect(fs.readFile(readmePath, "utf-8")).resolves.toBe("custom guidance\n");
   });
 
+  it("initializes a safe example server when creating the config file", async () => {
+    await service.ensureConfigFile();
+    await expect(service.load()).resolves.toMatchObject({
+      servers: [
+        {
+          tag: "example",
+          host: "192.0.2.10",
+          auth: { type: "key", keyPath: "~/.ssh/id_ed25519" },
+        },
+      ],
+    });
+  });
+
   it("throws InvalidConfigError on malformed JSON", async () => {
     await fs.writeFile(configPath, "{ malformed json ...", "utf-8");
     await expect(service.load()).rejects.toThrow(InvalidConfigError);
