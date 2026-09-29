@@ -1,34 +1,48 @@
 import type { AuthConfig, ServerConfig } from "../config/config.types.js";
+import type { CredentialStore } from "../credentials/credential-store.js";
+import { SystemCredentialStore } from "../credentials/system-credential-store.js";
 import type { ServerService } from "../server/server.service.js";
+import { CredentialStoreError } from "../utils/errors.js";
 import { logger } from "../utils/logger.js";
+import { type SecretPrompt, systemSecretPrompt } from "./credentials.command.js";
 import { type ServerPrompts, systemPrompts } from "./server-prompts.js";
 
 const tagPattern = /^[a-zA-Z0-9_-]+$/;
 
 export async function addCommand(
   serverService: ServerService,
-  prompts: ServerPrompts = systemPrompts
+  prompts: ServerPrompts = systemPrompts,
+  credentialStore: CredentialStore = new SystemCredentialStore(),
+  secretPrompt: SecretPrompt = systemSecretPrompt
 ): Promise<void> {
-  const server = await promptForServer(prompts);
+  const { server, needsPassword } = await promptForServer(prompts);
   await serverService.addServer(server);
+  if (needsPassword && server.auth.type === "password") {
+    await savePassword(server, credentialStore, secretPrompt);
+  }
   logger.success(`Added server "${server.tag}".`);
 }
 
 export async function editCommand(
   tag: string,
   serverService: ServerService,
-  prompts: ServerPrompts = systemPrompts
+  prompts: ServerPrompts = systemPrompts,
+  credentialStore: CredentialStore = new SystemCredentialStore(),
+  secretPrompt: SecretPrompt = systemSecretPrompt
 ): Promise<void> {
   const existing = await serverService.requireServerByTag(tag);
-  const server = await promptForServer(prompts, existing);
+  const { server, needsPassword } = await promptForServer(prompts, existing);
   await serverService.updateServer(tag, server);
+  if (needsPassword && server.auth.type === "password") {
+    await savePassword(server, credentialStore, secretPrompt);
+  }
   logger.success(`Updated server "${server.tag}".`);
 }
 
 async function promptForServer(
   prompts: ServerPrompts,
   existing?: ServerConfig
-): Promise<ServerConfig> {
+): Promise<{ server: ServerConfig; needsPassword: boolean }> {
   const tag = (await prompts.input("Tag", existing?.tag, validateTag)).trim();
   const name = (await prompts.input("Name", existing?.name, required("Name"))).trim();
   const host = (await prompts.input("Host", existing?.host, required("Host"))).trim();
@@ -40,21 +54,28 @@ async function promptForServer(
   const description = optional(
     await prompts.input("Description (optional)", existing?.description)
   );
-  const auth = await promptForAuth(prompts, existing?.auth);
+  const { auth, needsPassword } = await promptForAuth(prompts, tag, existing?.auth);
 
   return {
-    tag,
-    name,
-    host,
-    port: Number(portText),
-    username,
-    ...(group ? { group } : {}),
-    ...(description ? { description } : {}),
-    auth,
+    server: {
+      tag,
+      name,
+      host,
+      port: Number(portText),
+      username,
+      ...(group ? { group } : {}),
+      ...(description ? { description } : {}),
+      auth,
+    },
+    needsPassword,
   };
 }
 
-async function promptForAuth(prompts: ServerPrompts, existing?: AuthConfig): Promise<AuthConfig> {
+async function promptForAuth(
+  prompts: ServerPrompts,
+  tag: string,
+  existing?: AuthConfig
+): Promise<{ auth: AuthConfig; needsPassword: boolean }> {
   const type = await prompts.select(
     "Authentication method",
     [
@@ -68,26 +89,40 @@ async function promptForAuth(prompts: ServerPrompts, existing?: AuthConfig): Pro
   if (type === "key") {
     const initial = existing?.type === "key" ? existing.keyPath : "~/.ssh/id_ed25519";
     return {
-      type,
-      keyPath: (
-        await prompts.input("Private key path", initial, required("Private key path"))
-      ).trim(),
+      auth: {
+        type,
+        keyPath: (
+          await prompts.input("Private key path", initial, required("Private key path"))
+        ).trim(),
+      },
+      needsPassword: false,
     };
   }
   if (type === "password") {
-    const initial = existing?.type === "password" ? existing.secretRef : undefined;
     return {
-      type,
-      secretRef: (
-        await prompts.input(
-          "Credential reference (not the password)",
-          initial,
-          required("Credential reference")
-        )
-      ).trim(),
+      auth: {
+        type,
+        secretRef: existing?.type === "password" ? existing.secretRef : createSecretRef(tag),
+      },
+      needsPassword: existing?.type !== "password",
     };
   }
-  return { type: "agent" };
+  return { auth: { type: "agent" }, needsPassword: false };
+}
+
+function createSecretRef(tag: string): string {
+  return `sshdeck:${tag.toLowerCase()}`;
+}
+
+async function savePassword(
+  server: ServerConfig,
+  credentialStore: CredentialStore,
+  prompt: SecretPrompt
+): Promise<void> {
+  if (server.auth.type !== "password") return;
+  const secret = await prompt.requestPassword(`Password for ${server.username}@${server.host}`);
+  if (!secret) throw new CredentialStoreError("Password cannot be empty.");
+  await credentialStore.saveSecret(server.auth.secretRef, secret);
 }
 
 function optional(value: string): string | undefined {

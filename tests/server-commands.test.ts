@@ -7,6 +7,7 @@ import { removeCommand } from "../src/commands/remove.command.js";
 import type { PromptChoice, ServerPrompts } from "../src/commands/server-prompts.js";
 import { addCommand, editCommand } from "../src/commands/server-wizard.command.js";
 import { ConfigService } from "../src/config/config.service.js";
+import { MemoryCredentialStore } from "../src/credentials/memory-credential-store.js";
 import { ServerService } from "../src/server/server.service.js";
 import { logger } from "../src/utils/logger.js";
 
@@ -75,17 +76,27 @@ describe("server management commands", () => {
     });
   });
 
-  it("edits an existing server and can switch it to a password secret reference", async () => {
+  it("edits an existing server and saves a password without asking for a secret reference", async () => {
     const prompts = new StubPrompts(
-      ["production", "Production API", "192.168.1.11", "22", "admin", "", "", "production-admin"],
+      ["production", "Production API", "192.168.1.11", "22", "admin", "", ""],
       ["password"]
     );
-    await editCommand("prod", serverService, prompts);
+    const credentialStore = new MemoryCredentialStore();
+    await editCommand(
+      "prod",
+      serverService,
+      prompts,
+      credentialStore,
+      { requestPassword: async () => "stored-only-in-keychain" }
+    );
     await expect(serverService.requireServerByTag("production")).resolves.toMatchObject({
       host: "192.168.1.11",
       username: "admin",
-      auth: { type: "password", secretRef: "production-admin" },
+      auth: { type: "password", secretRef: "sshdeck:production" },
     });
+    await expect(credentialStore.getSecret("sshdeck:production")).resolves.toBe(
+      "stored-only-in-keychain"
+    );
   });
 
   it("only removes after confirmation unless forced", async () => {

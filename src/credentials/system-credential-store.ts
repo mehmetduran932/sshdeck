@@ -1,4 +1,4 @@
-import * as keytar from "keytar";
+import keytar from "keytar";
 import { CredentialStoreError } from "../utils/errors.js";
 import type { CredentialStore } from "./credential-store.js";
 

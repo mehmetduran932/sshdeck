@@ -74,6 +74,8 @@ environment variable setup is required; `SSHDECK_CONFIG_PATH` and
 
 Servers are defined in `~/.sshdeck/config.json`. You can create or edit this file directly:
 
+For the easiest setup, run `sshdeck add`, choose **Password**, and enter the password once when asked. SSHDeck creates the credential reference automatically and saves the password in your operating system's secure credential store.
+
 ```json
 {
   "version": 1,

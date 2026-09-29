@@ -91,7 +91,7 @@ export function createProgram(
     .description("Add a server")
     .action(async () => {
       try {
-        await addCommand(serverService);
+        await addCommand(serverService, undefined, credentialStore);
       } catch (err) {
         handleCliError(err);
       }
@@ -102,7 +102,7 @@ export function createProgram(
     .description("Edit a server")
     .action(async (tag: string) => {
       try {
-        await editCommand(tag, serverService);
+        await editCommand(tag, serverService, undefined, credentialStore);
       } catch (err) {
         handleCliError(err);
       }
