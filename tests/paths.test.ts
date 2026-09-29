@@ -19,7 +19,7 @@ describe("paths utility", () => {
   it("collapses home directory to tilde", () => {
     const home = os.homedir();
     expect(collapseHomeDir(home)).toBe("~");
-    expect(collapseHomeDir(path.join(home, ".sshdeck"))).toBe("~/.sshdeck");
+    expect(collapseHomeDir(path.join(home, ".sshdeck"))).toBe(`~${path.sep}.sshdeck`);
     expect(collapseHomeDir("/tmp/other")).toBe("/tmp/other");
   });
 
@@ -27,7 +27,9 @@ describe("paths utility", () => {
     const defaultDir = getDefaultConfigDir();
     const defaultPath = getDefaultConfigPath();
 
-    expect(defaultDir).toContain(".sshdeck");
+    expect(defaultDir).toBe(
+      process.platform === "win32" ? "C:\\sshdeck" : path.join(os.homedir(), ".sshdeck")
+    );
     expect(defaultPath).toBe(path.join(defaultDir, "config.json"));
   });
 

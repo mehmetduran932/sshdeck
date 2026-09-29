@@ -82,13 +82,9 @@ describe("server management commands", () => {
       ["password"]
     );
     const credentialStore = new MemoryCredentialStore();
-    await editCommand(
-      "prod",
-      serverService,
-      prompts,
-      credentialStore,
-      { requestPassword: async () => "stored-only-in-keychain" }
-    );
+    await editCommand("prod", serverService, prompts, credentialStore, {
+      requestPassword: async () => "stored-only-in-keychain",
+    });
     await expect(serverService.requireServerByTag("production")).resolves.toMatchObject({
       host: "192.168.1.11",
       username: "admin",
